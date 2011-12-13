@@ -1,0 +1,89 @@
+h3. This code was developed by Community/Developer Evangelism group.  Please file any issues through the Github project.
+
+h1. Mobile Express Checkout with jQuery Mobile & ColdFusion for subscriptions
+
+We’ve built a simple app to demonstrate how to integrate PayPal subscriptions with our Express Checkout product.  This example is built using jQuery Mobile and ColdFusion, but could easily be adapted for other mobile JS frameworks and server-side languages.
+
+h2. Server-side (ColdFusion)
+
+* Application.cfc – where our API credentials are stored
+* Paid.cfm – our premium content page where we read in the URL scope variables and assign them to a JavaScript object.
+* Subscribe.cfc – where we store methods that we call via AJAX which in turn make API calls to PayPal and return JSON to our app.
+* CallerService.cfc from the PayPal ColdFusion SDK is included in the lib/services/ folder
+
+h2. Client-side (jQuery Mobile)
+
+We start by listening for the pageshow event dispatched by jQuery Mobile.
+
+We listen for this event because every time the paid.cfm page is shown your app will be in one of three states.  
+
+* Not subscribed – user must kick off subscription flow
+* Not confirmed – in subscription flow and user must perform confirmation
+* Subscribed – verify subscription with data stored locally via HTML5
+
+h3. Not Subscribed – 1st state for paid.cfm
+
+You can reach paid.cfm via the home screen or by directly linking to the page.  In either case, the pageshow event is fired and will first check the browser localStorage for an item with the key of “123”.  This is a static value I made up, but you could easily add Facebook connect or some other identity management to generate a unique id to use as your key.  Then add a step for your users to login prior to reaching this page.  Since this is our first visit, there is nothing in localStorage, so we’ll check the “ec” variable for the URL key with a token attached.  If not then we are not in the “2nd state” and returning from PayPal.    We must be in the 1st state let’s insert the “subscribe button”.
+
+Kicking off the flow
+Your user will click the “subscribe” button to kick off the flow.  This button is bound to a click handler that makes an AJAX call to subscribe.cfc and calls the SetExpressCheckout method.  Now, you can call this method anything you want, but I mapped my method names to the API calls I’m making to PayPal.
+
+SetExpressCheckout Method
+On the server side, we make an API call to PayPal and pass it the required name value pairs.  If successful, PayPal will return a token and we pass back a url along with the token to our jQuery mobile app.  Our app will redirect to the url and the user will login to PayPal.
+
+Login and Agree
+
+Your user will login to PayPal and will be shown the recurring payments agreement page.  After they click the “agree and continue” button, they be redirected back to your app.  If you recall in our SetExpressCheckout method we defined our return URL.  In this example we are returning to paid.cfm.  Obviously, you could change this if you decide to return to a different page.  The important thing to remember is this return URL will have some variables attached.  You want to catch those on paid.cfm and assign them to the JavaScript variable called ec.
+
+
+
+<notextile>
+<pre>
+
+
+&lt;cfscript&gt;        
+returnObj = StructNew();         
+returnObj['url'] = url;     
+&lt;/cfscript&gt;
+
+&lt;script&gt;	
+ec = &lt;cfoutput&gt;#serializeJSON(returnObj)#&lt;/cfoutput&gt;; 		 		
+&lt;/script&gt;   
+	
+</pre>
+</notextile>
+
+h3. Not Confirmed – 2nd state for paid.cfm
+
+At this point the pageshow event will be dispatched by jQuery mobile.  We’ll check the “ec” variable for a URL key with a token attached and yes we’ll find it.  This means we are in the 2nd state (not confirmed).  I’ll do an AJAX call to get the checkout details.  Then display the amount and a confirm button.
+
+Confirm Your Subscription
+Your user will click on the “confirm your subscription” button. This will do an AJAX call to the CreateRecurringPaymentsProfile method.  This method does and API call to PayPal and returns the details for this subscription AND the premium content.  This means the premium content is not delivered to the client until after we’ve created our subscription.
+
+h3. Already Subscribed – 3rd state for paid.cfm
+
+Now, the subscription is complete and we’ve got the profile information saved locally.  If you close the app or refresh the app, the pageshow event is fired, but this time we find data is localstorage.  The profile id is passed to the GetRecurringPaymentsProfileDetails method on our server and if valid, the premium content is returned and displayed.
+
+If you want to reset your app, simply clear you localstorage.  In Safari, open up the preferences and under the privacy tab select “Remove all Website Data”
+
+h2. Installation
+
+This example requires the following features to be available on a hosted web server:
+* ColdFusion 9
+
+
+h2. Code Contributions
+
+Copyright 2011 X.commerce
+
+Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
