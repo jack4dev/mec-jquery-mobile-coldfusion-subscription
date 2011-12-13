@@ -36,20 +36,16 @@ Login and Agree
 Your user will login to PayPal and will be shown the recurring payments agreement page.  After they click the “agree and continue” button, they be redirected back to your app.  If you recall in our SetExpressCheckout method we defined our return URL.  In this example we are returning to paid.cfm.  Obviously, you could change this if you decide to return to a different page.  The important thing to remember is this return URL will have some variables attached.  You want to catch those on paid.cfm and assign them to the JavaScript variable called ec.
 
 
-
 <notextile>
 <pre>
-
-
 &lt;cfscript&gt;        
-returnObj = StructNew();         
-returnObj['url'] = url;     
+   returnObj = StructNew();         
+   returnObj['url'] = url;     
 &lt;/cfscript&gt;
 
 &lt;script&gt;	
-ec = &lt;cfoutput&gt;#serializeJSON(returnObj)#&lt;/cfoutput&gt;; 		 		
+   ec = &lt;cfoutput&gt;#serializeJSON(returnObj)#&lt;/cfoutput&gt;; 		 		
 &lt;/script&gt;   
-	
 </pre>
 </notextile>
 
